@@ -19,12 +19,12 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install numpy
+          pip install numpy PyGithub
           
       - name: Run similarity script
-          env:
-              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              ISSUE_NUMBER: ${{ github.event.issue.number }}
-              REPO: ${{ github.repository }}
-          run: |
-              python .github/scripts/similarity.py
+        env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            ISSUE_NUMBER: ${{ github.event.issue.number }}
+            REPO: ${{ github.repository }}
+        run: |
+            python .github/scripts/similarity.py
