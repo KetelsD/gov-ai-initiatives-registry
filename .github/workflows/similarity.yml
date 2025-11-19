@@ -20,7 +20,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install numpy
-
-      - name: Run placeholder script
-        run: |
-          python .github/scripts/placeholder.py
+          
+      - name: Run similarity script
+          env:
+              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              ISSUE_NUMBER: ${{ github.event.issue.number }}
+              REPO: ${{ github.repository }}
+          run: |
+              python .github/scripts/similarity.py
