@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install numpy PyGithub
+          pip install numpy PyGithub scikit-learn
           
       - name: Run similarity script
         env:
