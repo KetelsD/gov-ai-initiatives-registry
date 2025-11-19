@@ -1,0 +1,52 @@
+name: "AI Project / Idea Submission"
+description: "Register an AI idea or project so we can detect overlap and connect teams."
+labels: ["ai-initiative"]
+
+body:
+  - type: input
+    id: title
+    attributes:
+      label: Title of the project
+      placeholder: "AI classifier for building permits"
+
+  - type: dropdown
+    id: maturity
+    attributes:
+      label: Maturity level
+      options:
+        - Idea
+        - Pilot
+        - Production
+        - Research
+        - Procurement planning
+
+  - type: input
+    id: ministry
+    attributes:
+      label: Ministry / Agency
+      placeholder: "BZK / RVB / IND / Belastingdienst / COA"
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: "What problem is this project solving?"
+      placeholder: "Manual classification of permit documents..."
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Project description
+      placeholder: "We want a model that can classify PDFs and route them internally..."
+
+  - type: textarea
+    id: tech
+    attributes:
+      label: Technology (if known)
+      placeholder: "Azure AI, OpenAI, Qwen, OCR, vector DB..."
+
+  - type: input
+    id: contact
+    attributes:
+      label: Contact person(s)
+      placeholder: "john.doe@rijksoverheid.nl"
