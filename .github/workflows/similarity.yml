@@ -5,10 +5,22 @@ on:
     types: [opened, edited]
 
 jobs:
-  test:
+  similarity:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Say hello
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
         run: |
-          echo "The workflow is working."
-          echo "Issue number: ${{ github.event.issue.number }}"
+          pip install numpy
+
+      - name: Run placeholder script
+        run: |
+          python .github/scripts/placeholder.py
