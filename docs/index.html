@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI Project Intake Form</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      max-width: 700px;
+      margin: auto;
+      line-height: 1.6;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 1rem;
+    }
+    button {
+      background: #0366d6;
+      color: white;
+      border: none;
+      margin-top: 20px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #024ea2;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>AI Project / Initiative Submission</h1>
+  <p>This form registers your AI idea so similar initiatives can be detected across teams.</p>
+
+  <form id="aiForm">
+    <label>Project Title</label>
+    <input name="title" required />
+
+    <label>Maturity</label>
+    <select name="maturity" required>
+      <option>Idea</option>
+      <option>Pilot</option>
+      <option>Research</option>
+      <option>Production</option>
+      <option>Procurement planning</option>
+    </select>
+
+    <label>Ministry / Agency</label>
+    <input name="ministry" required />
+
+    <label>Problem Statement</label>
+    <textarea name="problem" rows="4" required></textarea>
+
+    <label>Project Description</label>
+    <textarea name="description" rows="5" required></textarea>
+
+    <label>Technology (optional)</label>
+    <textarea name="tech" rows="2"></textarea>
+
+    <label>Contact Email</label>
+    <input name="contact" required />
+
+    <button type="submit">Submit Project</button>
+  </form>
+
+  <h2 id="status" class="hidden">Submitting...</h2>
+
+  <script>
+    document.getElementById("aiForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const status = document.getElementById("status");
+      status.classList.remove("hidden");
+      status.innerText = "Submitting...";
+
+      const formData = Object.fromEntries(new FormData(e.target).entries());
+
+      const resp = await fetch(
+        "https://api.github.com/repos/KetelsD/gov-ai-initiatives-registry/actions/workflows/intake.yml/dispatches",
+        {
+          method: "POST",
+          headers: {
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ref: "main",
+            inputs: formData,
+          }),
+        }
+      );
+
+      if (resp.ok) {
+        status.innerText = "Submitted successfully! Your idea is being processed.";
+      } else {
+        status.innerText = "Error submitting. Please try again.";
+      }
+    });
+  </script>
+</body>
+</html>
