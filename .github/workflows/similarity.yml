@@ -19,7 +19,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install numpy PyGithub scikit-learn
+          pip install numpy PyGithub scikit-learn openai
           
       - name: Run similarity script
         env:
