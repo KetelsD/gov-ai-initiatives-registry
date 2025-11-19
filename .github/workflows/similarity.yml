@@ -23,8 +23,9 @@ jobs:
           
       - name: Run similarity script
         env:
-            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            ISSUE_NUMBER: ${{ github.event.issue.number }}
-            REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
         run: |
-            python .github/scripts/similarity.py
+          python .github/scripts/similarity.py
