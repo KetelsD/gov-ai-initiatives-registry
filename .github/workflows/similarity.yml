@@ -5,8 +5,10 @@ on:
     types: [opened, edited]
 
 jobs:
-  initialize:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Confirm workflow trigger
-        run: echo 'Similarity workflow triggered for issue #${{ github.event.issue.number }}'
+      - name: Say hello
+        run: |
+          echo "The workflow is working."
+          echo "Issue number: ${{ github.event.issue.number }}"
