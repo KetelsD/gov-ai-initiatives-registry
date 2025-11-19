@@ -1,69 +1,84 @@
 import os
 import json
+import numpy as np
 from github import Github
-from sklearn.feature_extraction.text import TfidfVectorizer
+from openai import OpenAI
 from sklearn.metrics.pairwise import cosine_similarity
 
-# --- Setup GitHub variables ---
+# --- GitHub context ---
 issue_number = int(os.environ["ISSUE_NUMBER"])
 repo_name = os.environ["REPO"]
-token = os.environ["GH_TOKEN"]
+gh_token = os.environ["GH_TOKEN"]
+openai_key = os.environ["OPENAI_API_KEY"]
 
 # --- Connect to GitHub ---
-gh = Github(token)
+gh = Github(gh_token)
 repo = gh.get_repo(repo_name)
 issue = repo.get_issue(number=issue_number)
 
-# --- Database path ---
-db_path = ".github/issue_db.json"
+# --- OpenAI client ---
+client = OpenAI(api_key=openai_key)
 
-# Load DB
-if os.path.exists(db_path):
-    db = json.load(open(db_path, "r"))
+# --- DB paths ---
+text_db_path = ".github/issue_texts.json"
+embeddings_db_path = ".github/issue_embeddings.json"
+
+# Load DBs
+if os.path.exists(text_db_path):
+    text_db = json.load(open(text_db_path, "r"))
 else:
-    db = {}
+    text_db = {}
 
-# --- Current issue text ---
+if os.path.exists(embeddings_db_path):
+    embeddings_db = json.load(open(embeddings_db_path, "r"))
+else:
+    embeddings_db = {}
+
+# --- Extract current issue text ---
 current_text = (issue.title or "") + "\n" + (issue.body or "")
 
-# If no previous issues, just store and exit
-if len(db) == 0:
-    db[str(issue_number)] = current_text
-    json.dump(db, open(db_path, "w"))
-    print("No previous issues — stored current issue only.")
+# --- Helper: embed text ---
+def embed(text):
+    response = client.embeddings.create(
+        model="text-embedding-3-small",
+        input=text
+    )
+    return response.data[0].embedding
+
+# If no previous data → store and exit
+if len(embeddings_db) == 0:
+    current_emb = embed(current_text)
+    embeddings_db[str(issue_number)] = current_emb
+    text_db[str(issue_number)] = current_text
+    json.dump(embeddings_db, open(embeddings_db_path, "w"))
+    json.dump(text_db, open(text_db_path, "w"))
+    print("First issue stored — no comparisons made.")
     exit(0)
 
-# --- Build corpus for TF-IDF ---
-corpus = [current_text]  # index 0 = new issue
-index_map = ["current"]
+# --- Compute embedding for current issue ---
+current_emb = np.array(embed(current_text))
 
-for num, text in db.items():
-    corpus.append(text)
-    index_map.append(num)
-
-# --- TF-IDF ---
-vectorizer = TfidfVectorizer(stop_words="english")
-vectors = vectorizer.fit_transform(corpus)
-
-# Compare index 0 to all others
-similarities = cosine_similarity(vectors[0:1], vectors[1:]).flatten()
-
-# Threshold
-THRESHOLD = 0.55
+# --- Compare to all existing issues ---
 matches = []
+THRESHOLD = 0.80  # LLM embeddings are much stronger
 
-for score, num in zip(similarities, index_map[1:]):
-    if score > THRESHOLD:
+for num, emb in embeddings_db.items():
+    emb = np.array(emb)
+    score = cosine_similarity([current_emb], [emb])[0][0]
+    if score >= THRESHOLD:
         matches.append((num, score))
 
 # --- Comment results ---
 if matches:
     matches = sorted(matches, key=lambda x: x[1], reverse=True)
-    message = "### 🔍 Potential related AI project ideas detected\n\n"
+    msg = "### 🔍 AI detected related initiatives\n\n"
     for num, score in matches:
-        message += f"- Issue #{num} — similarity **{score:.2f}**\n"
-    issue.create_comment(message)
+        msg += f"- Issue #{num} — similarity **{score:.2f}**\n"
+    issue.create_comment(msg)
 
-# Update DB
-db[str(issue_number)] = current_text
-json.dump(db, open(db_path, "w"))
+# --- Store this issue ---
+embeddings_db[str(issue_number)] = current_emb.tolist()
+text_db[str(issue_number)] = current_text
+
+json.dump(embeddings_db, open(embeddings_db_path, "w"))
+json.dump(text_db, open(text_db_path, "w"))
