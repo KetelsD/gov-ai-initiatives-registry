@@ -9,4 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Confirm workflow trigger
-        run: echo "Similarity workflow triggered for issue #${{ github.event.issue.number }}"
+        run: echo 'Similarity workflow triggered for issue #${{ github.event.issue.number }}'
