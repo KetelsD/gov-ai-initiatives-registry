@@ -1,0 +1,12 @@
+name: AI Similarity Checker
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  initialize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm workflow trigger
+        run: echo "Similarity workflow triggered for issue #${{ github.event.issue.number }}"
