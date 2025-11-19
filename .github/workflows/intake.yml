@@ -34,22 +34,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Create GitHub Issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TITLE="${{ github.event.inputs.title }}"
-          BODY="**Maturity:** ${{ github.event.inputs.maturity }}
+
+          BODY=$(cat <<EOF
+**Maturity:** ${{ github.event.inputs.maturity }}
 **Ministry:** ${{ github.event.inputs.ministry }}
-**Problem Statement:** ${{ github.event.inputs.problem }}
-**Project Description:** ${{ github.event.inputs.description }}
-**Tech:** ${{
-            github.event.inputs.tech
-          }}
-**Contact:** ${{ github.event.inputs.contact }}"
+
+**Problem Statement:**
+${{ github.event.inputs.problem }}
+
+**Project Description:**
+${{ github.event.inputs.description }}
+
+**Tech:**
+${{ github.event.inputs.tech }}
+
+**Contact:** ${{ github.event.inputs.contact }}
+EOF
+)
 
           gh issue create \
             --title "$TITLE" \
             --body "$BODY" \
             --label "ai-initiative" \
             --repo "$GITHUB_REPOSITORY"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
