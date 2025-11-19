@@ -1,0 +1,55 @@
+name: Intake Form Receiver
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        required: true
+        type: string
+      maturity:
+        required: true
+        type: string
+      ministry:
+        required: true
+        type: string
+      problem:
+        required: true
+        type: string
+      description:
+        required: true
+        type: string
+      tech:
+        required: false
+        type: string
+      contact:
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  create_issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Create GitHub Issue
+        run: |
+          TITLE="${{ github.event.inputs.title }}"
+          BODY="**Maturity:** ${{ github.event.inputs.maturity }}
+**Ministry:** ${{ github.event.inputs.ministry }}
+**Problem Statement:** ${{ github.event.inputs.problem }}
+**Project Description:** ${{ github.event.inputs.description }}
+**Tech:** ${{
+            github.event.inputs.tech
+          }}
+**Contact:** ${{ github.event.inputs.contact }}"
+
+          gh issue create \
+            --title "$TITLE" \
+            --body "$BODY" \
+            --label "ai-initiative" \
+            --repo "$GITHUB_REPOSITORY"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
