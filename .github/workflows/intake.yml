@@ -4,24 +4,31 @@ on:
   workflow_dispatch:
     inputs:
       title:
+        description: "Project title"
         required: true
         type: string
       maturity:
+        description: "Maturity level"
         required: true
         type: string
       ministry:
+        description: "Ministry or agency"
         required: true
         type: string
       problem:
+        description: "Problem statement"
         required: true
         type: string
       description:
+        description: "Project description"
         required: true
         type: string
       tech:
+        description: "Technology (optional)"
         required: false
         type: string
       contact:
+        description: "Contact email"
         required: true
         type: string
 
@@ -34,32 +41,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Create GitHub Issue
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TITLE: ${{ github.event.inputs.title }}
+          MATURITY: ${{ github.event.inputs.maturity }}
+          MINISTRY: ${{ github.event.inputs.ministry }}
+          PROBLEM: ${{ github.event.inputs.problem }}
+          DESCRIPTION: ${{ github.event.inputs.description }}
+          TECH: ${{ github.event.inputs.tech }}
+          CONTACT: ${{ github.event.inputs.contact }}
         run: |
-          TITLE="${{ github.event.inputs.title }}"
+          printf "**Maturity:** %s\n" "$MATURITY" > body.txt
+          printf "**Ministry:** %s\n\n" "$MINISTRY" >> body.txt
 
-          BODY=$(cat <<EOF
-**Maturity:** ${{ github.event.inputs.maturity }}
-**Ministry:** ${{ github.event.inputs.ministry }}
+          printf "**Problem Statement:**\n%s\n\n" "$PROBLEM" >> body.txt
+          printf "**Project Description:**\n%s\n\n" "$DESCRIPTION" >> body.txt
+          printf "**Tech:**\n%s\n\n" "$TECH" >> body.txt
 
-**Problem Statement:**
-${{ github.event.inputs.problem }}
-
-**Project Description:**
-${{ github.event.inputs.description }}
-
-**Tech:**
-${{ github.event.inputs.tech }}
-
-**Contact:** ${{ github.event.inputs.contact }}
-EOF
-)
+          printf "**Contact:** %s\n" "$CONTACT" >> body.txt
 
           gh issue create \
             --title "$TITLE" \
-            --body "$BODY" \
+            --body-file body.txt \
             --label "ai-initiative" \
             --repo "$GITHUB_REPOSITORY"
