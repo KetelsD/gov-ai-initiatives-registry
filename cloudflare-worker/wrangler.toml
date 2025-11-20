@@ -1,0 +1,19 @@
+name = "ai-initiative-worker"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# Secrets are set via CLI:
+# wrangler secret put GITHUB_PAT
+# wrangler secret put GITHUB_REPO
+
+# If you need to set custom routes or domains:
+# routes = [
+#   { pattern = "yourdomain.com/api/*", zone_name = "yourdomain.com" }
+# ]
+
+# Environment-specific settings
+[env.production]
+name = "ai-initiative-worker"
+
+[env.staging]
+name = "ai-initiative-worker-staging"

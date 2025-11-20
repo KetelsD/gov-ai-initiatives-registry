@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
   <meta charset="UTF-8" />
-  <title>AI Project Intake Form</title>
+  <title>AI Project Registratie Formulier</title>
 
   <style>
     body {
@@ -35,71 +35,95 @@
 </head>
 
 <body>
-  <h1>AI Project / Initiative Submission</h1>
-  <p>This form registers your AI idea so similar initiatives can be detected across teams.</p>
+  <h1>AI Project / Initiatief Aanmelding</h1>
+  <p>Met dit formulier registreer je jouw AI-idee zodat vergelijkbare initiatieven tussen teams kunnen worden gedetecteerd.</p>
 
   <form id="aiForm">
-    <label>Project Title</label>
-    <input name="title" required />
+    <label>Projecttitel</label>
+    <input name="title" required placeholder="Bijvoorbeeld: AI classificatie voor bouwvergunningen" />
 
-    <label>Maturity</label>
+    <label>Volwassenheidsniveau</label>
     <select name="maturity" required>
-      <option>Idea</option>
+      <option value="">-- Selecteer --</option>
+      <option>Idee</option>
       <option>Pilot</option>
-      <option>Research</option>
-      <option>Production</option>
-      <option>Procurement planning</option>
+      <option>Onderzoek</option>
+      <option>Productie</option>
+      <option>Inkoopplanning</option>
     </select>
 
-    <label>Ministry / Agency</label>
-    <input name="ministry" required />
+    <label>Ministerie / Organisatie</label>
+    <input name="ministry" required placeholder="Bijvoorbeeld: BZK / RVB / IND / Belastingdienst / COA" />
 
-    <label>Problem Statement</label>
-    <textarea name="problem" rows="4" required></textarea>
+    <label>Probleemstelling</label>
+    <textarea name="problem" rows="4" required placeholder="Welk probleem lost dit project op?"></textarea>
 
-    <label>Project Description</label>
-    <textarea name="description" rows="5" required></textarea>
+    <label>Projectomschrijving</label>
+    <textarea name="description" rows="5" required placeholder="Beschrijf het project in meer detail..."></textarea>
 
-    <label>Technology (optional)</label>
-    <textarea name="tech" rows="2"></textarea>
+    <label>Technologie (optioneel)</label>
+    <textarea name="tech" rows="2" placeholder="Bijvoorbeeld: Azure AI, OpenAI, Qwen, OCR, vector DB..."></textarea>
 
-    <label>Contact Email</label>
-    <input name="contact" required />
+    <label>Contactpersoon (e-mail)</label>
+    <input name="contact" type="email" required placeholder="naam@rijksoverheid.nl" />
 
-    <button type="submit">Submit Project</button>
+    <!-- Honeypot field for spam protection (hidden from users) -->
+    <input name="website" style="display:none" tabindex="-1" autocomplete="off" />
+
+    <button type="submit">Indienen</button>
   </form>
 
-  <h2 id="status" class="hidden">Submitting...</h2>
+  <h2 id="status" class="hidden">Bezig met indienen...</h2>
 
   <script>
+    // IMPORTANT: Replace this URL with your deployed Cloudflare Worker URL
+    const WORKER_URL = "https://ai-initiative-worker.driesketels.workers.dev/submit";
+
     document.getElementById("aiForm").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const status = document.getElementById("status");
+      const form = e.target;
+      const submitButton = form.querySelector('button[type="submit"]');
+
+      // Disable submit button and show status
+      submitButton.disabled = true;
       status.classList.remove("hidden");
-      status.innerText = "Submitting...";
+      status.innerText = "Bezig met indienen...";
+      status.style.color = "#0366d6";
 
-      const formData = Object.fromEntries(new FormData(e.target).entries());
+      const formData = Object.fromEntries(new FormData(form).entries());
 
-      const resp = await fetch(
-        "https://api.github.com/repos/KetelsD/gov-ai-initiatives-registry/actions/workflows/intake.yml/dispatches",
-        {
+      try {
+        const resp = await fetch(WORKER_URL, {
           method: "POST",
           headers: {
-            "Accept": "application/vnd.github+json",
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            ref: "main",
-            inputs: formData,
-          }),
-        }
-      );
+          body: JSON.stringify(formData),
+        });
 
-      if (resp.ok) {
-        status.innerText = "Submitted successfully! Your idea is being processed.";
-      } else {
-        status.innerText = "Error submitting. Please try again.";
+        const result = await resp.json();
+
+        if (resp.ok && result.success) {
+          status.style.color = "#28a745";
+          status.innerText = result.message || "Succesvol ingediend! Jouw idee wordt verwerkt.";
+
+          // Show issue link if available
+          if (result.issueUrl) {
+            status.innerHTML = `${status.innerText}<br><a href="${result.issueUrl}" target="_blank" style="color: #0366d6;">Bekijk je inzending (Issue #${result.issueNumber})</a>`;
+          }
+
+          // Reset form after successful submission
+          form.reset();
+        } else {
+          throw new Error(result.error || "Inzending mislukt");
+        }
+      } catch (error) {
+        console.error("Submission error:", error);
+        status.style.color = "#d73a49";
+        status.innerText = `Fout: ${error.message || "Probeer het later opnieuw."}`;
+        submitButton.disabled = false;
       }
     });
   </script>
